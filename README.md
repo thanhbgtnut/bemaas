@@ -40,7 +40,7 @@
 - **Một binary**: API (Hertz) và giao diện React được nhúng bằng `embed.FS`. Không cần web server riêng.
 - **Nhiều chuẩn API**: OpenAI, Anthropic, SystemOne, TurboOCR, MinerU. Tab API, mã mẫu và Playground tự dựng theo chuẩn của từng model.
 - **Kiểm soát chi phí**: ngân sách tháng theo phòng, hạn mức theo key. Budget Enforcer tự khoá key vượt hạn mức.
-- **Cấu hình theo kiểu WeKnora**: `config.yaml` chỉ chứa `${BIẾN}`, giá trị thật nằm trong `.env`, ConfigMap hoặc Secret.
+- **Cấu hình tách khỏi giá trị**: `config.yaml` chỉ chứa `${BIẾN}`, giá trị thật nằm trong `.env`, ConfigMap hoặc Secret.
 
 Đặc tả đầy đủ: [docs/spec-maas.md](docs/spec-maas.md). Các điểm cần đối chiếu với cụm thật: [docs/luu-y-trien-khai.md](docs/luu-y-trien-khai.md).
 
