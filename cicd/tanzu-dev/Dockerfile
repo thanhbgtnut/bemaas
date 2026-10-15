@@ -1,6 +1,6 @@
 # Stage 1: build giao diện và binary.
 # Base image (cicd/tanzu-dev/Dockerfile.base) đã có Go, Node, Go module cache và node_modules
-# của web/, nên bước này không cần apt / npm.
+# của frontend/, nên bước này không cần apt / npm.
 ARG BASE_IMAGE=registry.internal/cicd-common/bemaas-base:1.0.0
 ARG RUNTIME_IMAGE=registry.internal/cicd-common/debian:bookworm-slim
 
@@ -15,10 +15,10 @@ ENV GOSUMDB=off
 
 COPY . /app
 
-# Giao diện: Vite build ra web/dist, được nhúng vào binary (web/embed.go).
-WORKDIR /app/web
+# Giao diện: Vite build vào internal/webui/dist, được nhúng vào binary (internal/webui).
+WORKDIR /app/frontend
 RUN cmp -s package-lock.json /opt/web/package-lock.json \
-    || { echo "web/package-lock.json khác base image: build lại cicd/tanzu-dev/Dockerfile.base"; exit 1; }
+    || { echo "frontend/package-lock.json khác base image: build lại cicd/tanzu-dev/Dockerfile.base"; exit 1; }
 RUN cp -a /opt/web/node_modules ./node_modules && npm run build
 
 WORKDIR /app
@@ -35,14 +35,14 @@ WORKDIR /app
 
 COPY --from=builder /out/bemaas /app/bemaas
 # config.yaml chỉ chứa ${BIẾN}; giá trị lấy từ biến môi trường / ConfigMap app.env.
-COPY --from=builder /app/config.yaml /app/config.yaml
+COPY --from=builder /app/configs/config.yaml /app/configs/config.yaml
 # Tệp image slim thiếu, lấy từ base image thay vì apt.
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 # BEMAAS_ENV: ConfigMap app.env được gắn dạng tệp ở /deployment/config (values.yaml).
 # Không có tệp thì bỏ qua; biến môi trường có sẵn luôn được ưu tiên hơn tệp.
-ENV BEMAAS_CONFIG=/app/config.yaml \
+ENV BEMAAS_CONFIG=/app/configs/config.yaml \
     BEMAAS_ENV=/deployment/config/app.env \
     SERVER_ADDR=:8080
 

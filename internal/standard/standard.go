@@ -3,7 +3,7 @@
 //
 // Thêm chuẩn mới: thêm một phần tử vào All. Nếu chuẩn mới dùng lại một Kind đã có (ví dụ một OCR khác
 // nhận multipart), giao diện tự hiển thị mà không cần sửa frontend; Kind mới thì cần thêm bộ hiển thị
-// tương ứng ở web/src/standards.ts và Playground.
+// tương ứng ở frontend/src/standards.ts và Playground.
 package standard
 
 import (

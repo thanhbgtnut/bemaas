@@ -40,7 +40,7 @@
 - **Một binary**: API (Hertz) và giao diện React được nhúng bằng `embed.FS`. Không cần web server riêng.
 - **Nhiều chuẩn API**: OpenAI, Anthropic, SystemOne, TurboOCR, MinerU. Tab API, mã mẫu và Playground tự dựng theo chuẩn của từng model.
 - **Kiểm soát chi phí**: ngân sách tháng theo phòng, hạn mức theo key. Budget Enforcer tự khoá key vượt hạn mức.
-- **Cấu hình tách khỏi giá trị**: `config.yaml` chỉ chứa `${BIẾN}`, giá trị thật nằm trong `.env`, ConfigMap hoặc Secret.
+- **Cấu hình tách khỏi giá trị**: `configs/config.yaml` chỉ chứa `${BIẾN}`, giá trị thật nằm trong `.env`, ConfigMap hoặc Secret.
 
 Đặc tả đầy đủ: [docs/spec-maas.md](docs/spec-maas.md). Các điểm cần đối chiếu với cụm thật: [docs/luu-y-trien-khai.md](docs/luu-y-trien-khai.md).
 
@@ -114,14 +114,15 @@ flowchart LR
 
 ## 🚀 Bắt đầu nhanh
 
-Cần Go 1.26, Node 22, Docker.
+Cần Go 1.26, Node 22, Docker, GNU make và bash. Trên Windows chạy các lệnh `make` trong **Git Bash** (cài Git for Windows và `make`, ví dụ `winget install ezwinports.make`).
 
 ```sh
+make                 # liệt kê các lệnh
 cp .env.example .env # sửa nếu cần; make tự tạo nếu chưa có
-make infra-up        # PostgreSQL :5432, Redis :6380, S3 (SeaweedFS) :9000, Keycloak :8180
+make up              # PostgreSQL :5432, Redis :6380, S3 (SeaweedFS) :9000, Keycloak :8180
 make seed            # migration + danh mục model, bảng giá, phòng mẫu
-make build           # build giao diện vào web/dist rồi build bin/bemaas
-./bin/bemaas         # đọc ./config.yaml và ./.env
+make build-server    # build giao diện vào internal/webui/dist rồi build bin/bemaas (bin/bemaas.exe trên Windows)
+./bin/bemaas         # đọc ./configs/config.yaml và ./.env
 make devmock         # terminal khác: agentgateway và MCP server giả
 ```
 
@@ -129,13 +130,13 @@ Mở http://localhost:8080 và đăng nhập bằng tài khoản trong realm `ma
 
 Muốn có dữ liệu minh hoạ (gán phòng, tạo key, 30 ngày sử dụng): đăng nhập các tài khoản mẫu một lần rồi chạy `make seed-demo`.
 
-Lúc khởi động, server chờ tối đa 60 giây cho PostgreSQL, S3 và Keycloak, nên chạy ngay sau `make infra-up` cũng được.
+Lúc khởi động, server chờ tối đa 60 giây cho PostgreSQL, S3 và Keycloak, nên chạy ngay sau `make up` cũng được. `make dev` gộp `up`, `migrate` và `run`.
 
 ### Phát triển giao diện
 
 ```sh
-make run        # backend :8080
-make dev-web    # Vite :5173, proxy /api sang :8080
+make run-web    # backend :8080 và Vite :5173 (proxy /api sang :8080), Ctrl+C dừng cả hai
+# hoặc tách hai terminal: ./scripts/run-backend.sh và ./scripts/run-frontend.sh
 ```
 
 ### Chạy thử trọn vòng với `make devmock`
@@ -151,7 +152,7 @@ Thử như sau: vào **Ngân sách & key**, mở chi tiết phòng và cấp m�
 
 ## ⚙️ Cấu hình
 
-- `config.yaml` được commit, chỉ chứa `${BIẾN}` hoặc `${BIẾN:-mặc định}`.
+- `configs/config.yaml` được commit, chỉ chứa `${BIẾN}` hoặc `${BIẾN:-mặc định}`.
 - `.env` không commit; mẫu ở [.env.example](.env.example).
 - Biến môi trường có sẵn được ưu tiên hơn `.env`, nên trên Kubernetes chỉ cần gắn ConfigMap hoặc Secret.
 - Thiếu biến bắt buộc thì server dừng và báo đúng tên biến.
@@ -171,14 +172,14 @@ Thử như sau: vào **Ngân sách & key**, mở chi tiết phòng và cấp m�
 
 ## 📦 Triển khai
 
-**Image đơn giản**: `make image`, dựng từ [Dockerfile](Dockerfile) (distroless, một binary, kèm `config.yaml`).
+**Image đơn giản**: `make docker`, dựng từ [deploy/Dockerfile](deploy/Dockerfile) (distroless, một binary, kèm `configs/config.yaml`).
 
 **Tanzu / Jenkins trong mạng nội bộ** ([cicd/tanzu-dev](cicd/tanzu-dev)):
 
 | Tệp | Vai trò |
 |---|---|
-| `Dockerfile.base` | Build **một lần** trên máy có internet: Go, Node, Go module cache, `node_modules` của `web/`. Đẩy lên Harbor nội bộ |
-| `Dockerfile` | Build trong CI từ base image, không cần apt hay npm. Dừng nếu `web/package-lock.json` lệch với base |
+| `Dockerfile.base` | Build **một lần** trên máy có internet: Go, Node, Go module cache, `node_modules` của `frontend/`. Đẩy lên Harbor nội bộ |
+| `Dockerfile` | Build trong CI từ base image, không cần apt hay npm. Dừng nếu `frontend/package-lock.json` lệch với base |
 | `Jenkinsfile` | Build, push image, đóng gói Helm và deploy |
 | `L01/deploy-k8s/values.yaml` | Helm values: cổng 8080, probe `/healthz`, chạy non-root, root filesystem chỉ đọc |
 | `L01/configmap-k8s/app.env` | Biến môi trường cho môi trường dev |
@@ -188,7 +189,7 @@ docker build --platform linux/amd64 -f cicd/tanzu-dev/Dockerfile.base \
   -t registry.internal/cicd-common/bemaas-base:1.0.0 .
 ```
 
-Build lại base image khi đổi phiên bản Go hoặc `web/package-lock.json`.
+Build lại base image khi đổi phiên bản Go hoặc `frontend/package-lock.json`.
 
 ## 🗂 Cấu trúc mã nguồn
 
@@ -198,7 +199,7 @@ cmd/devmock/       CHỈ LOCAL: agentgateway và MCP server giả
 internal/api/      handler Hertz cho /api/v1
 internal/auth/     kiểm access token Keycloak, nạp vai trò MaaS
 internal/config/   nạp .env, thay ${BIẾN} trong config.yaml
-internal/db/       pgx, migration nhúng
+internal/db/       pgx, chạy migration
 internal/cache/    Redis: cache, khoá phân tán cho job
 internal/storage/  S3 (minio-go): gói skill, URL tải có thời hạn
 internal/apikey/   sinh key mk-<live|test>-…, băm sha256
@@ -210,8 +211,12 @@ internal/jobs/     Budget Enforcer, thông báo ngưỡng
 internal/mcp/      client MCP, quét định kỳ
 internal/notify/   thông báo trong ứng dụng
 internal/audit/    nhật ký thao tác chỉ ghi thêm
-web/               React + Tailwind (Vite), build ra web/dist rồi nhúng vào binary
-deploy/            docker compose local, realm Keycloak, dữ liệu mẫu
+internal/webui/    nhúng bản build giao diện (internal/webui/dist) vào binary
+configs/           config.yaml (chỉ chứa ${BIẾN})
+migrations/        migration SQL (migrations/postgres), nhúng vào binary
+frontend/          React + Tailwind (Vite), build ra internal/webui/dist
+scripts/           chạy backend, frontend khi phát triển (make run-web)
+deploy/            Dockerfile, docker compose local, realm Keycloak, dữ liệu mẫu
 cicd/              Dockerfile, Jenkinsfile, Helm values cho Tanzu
 ```
 

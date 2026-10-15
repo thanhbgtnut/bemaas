@@ -6,9 +6,9 @@
 #
 # Nội dung:
 #   - Go toolchain (theo go.mod), tzdata, ca-certificates   (từ image golang chính thức)
-#   - Node.js + npm                                         (build giao diện web/)
+#   - Node.js + npm                                         (build giao diện frontend/)
 #   - Go module cache tải sẵn từ go.mod / go.sum
-#   - node_modules của web/ trong /opt/web                  (từ web/package-lock.json, bản linux)
+#   - node_modules của frontend/ trong /opt/web             (từ frontend/package-lock.json, bản linux)
 #
 # Build từ thư mục gốc bemaas (linux/amd64, chạy được cả trên Mac ARM):
 #   docker build --platform linux/amd64 -f cicd/tanzu-dev/Dockerfile.base \
@@ -20,7 +20,7 @@
 #   (trong mạng nội bộ) docker load < bemaas-base-1.0.0.tar.gz && docker push ...
 #
 # Build lại (và tăng tag, sửa BASE_IMAGE trong Dockerfile) khi: đổi phiên bản Go trong go.mod,
-# hoặc đổi web/package-lock.json. Chỉ thêm Go module mới thì không cần build lại.
+# hoặc đổi frontend/package-lock.json. Chỉ thêm Go module mới thì không cần build lại.
 
 ARG GO_IMAGE=golang:1.26-bookworm
 ARG NODE_IMAGE=node:22-bookworm-slim
@@ -47,7 +47,7 @@ RUN go mod download
 # Thư viện giao diện. Giữ lại package-lock.json để bản build CI phát hiện lệch phiên bản.
 # npm ci chạy trên linux/amd64 nên cài đúng gói native (esbuild, rollup, tailwind oxide) bản linux.
 WORKDIR /opt/web
-COPY web/package.json web/package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci && npm cache clean --force
 
 WORKDIR /

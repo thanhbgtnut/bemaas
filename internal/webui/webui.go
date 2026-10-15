@@ -1,6 +1,6 @@
-// Package web nhúng bản build tĩnh của giao diện React (web/dist) vào binary Go.
-// Chạy `make web` (npm run build) trước `go build` để có bản giao diện mới nhất.
-package web
+// Package webui nhúng bản build của giao diện React (frontend/, `make ui`) vào binary Go,
+// để một binary phục vụ cả API lẫn giao diện. Vite build thẳng vào internal/webui/dist.
+package webui
 
 import (
 	"embed"

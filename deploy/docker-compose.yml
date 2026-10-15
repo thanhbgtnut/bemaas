@@ -1,4 +1,4 @@
-# Hạ tầng chạy local cho bemaas. Đọc biến từ ../.env (make infra-up truyền --env-file),
+# Hạ tầng chạy local cho bemaas. Đọc biến từ ../.env (make up truyền --env-file),
 # nên mật khẩu PostgreSQL, khoá S3, tài khoản Keycloak khai báo một lần trong .env.
 # Backend chạy trên máy (make run), không chạy trong compose, để issuer Keycloak
 # (http://localhost:8180/realms/maas) giống nhau giữa trình duyệt và backend.

@@ -31,7 +31,7 @@ func TestCatalog(t *testing.T) {
 					if f == "" {
 						continue
 					}
-					if _, err := os.Stat("../../web/public" + f); err != nil {
+					if _, err := os.Stat("../../frontend/public" + f); err != nil {
 						t.Errorf("%s/%s/%s: không có tệp mẫu %s", s.ID, op.ID, ex.Title, f)
 					}
 				}

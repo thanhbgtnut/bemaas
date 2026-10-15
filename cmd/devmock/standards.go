@@ -284,7 +284,7 @@ func (g *gateway) systemone(w http.ResponseWriter, r *http.Request) {
 	go g.export(uuid.NewString(), k, req.Model, u, http.StatusOK)
 }
 
-// Ảnh mẫu của Playground (web/public/examples): devmock không nhìn được ảnh, nên nhận ra ảnh mẫu theo mã băm
+// Ảnh mẫu của Playground (frontend/public/examples): devmock không nhìn được ảnh, nên nhận ra ảnh mẫu theo mã băm
 // và coi như đã đọc được nội dung này. Ảnh khác coi như không đọc được gì.
 var sampleImages = map[string]string{
 	"uy-nhiem-chi.png": "ủy nhiệm chi ủy_nhiem_chi số tiền 125.000.000 VND khớp rõ đọc được hết",
@@ -294,7 +294,7 @@ var sampleImages = map[string]string{
 func sampleImageText(b []byte) string {
 	sum := sha256.Sum256(b)
 	for name, text := range sampleImages {
-		f, err := os.ReadFile("web/public/examples/" + name)
+		f, err := os.ReadFile("frontend/public/examples/" + name)
 		if err == nil && sha256.Sum256(f) == sum {
 			return text
 		}

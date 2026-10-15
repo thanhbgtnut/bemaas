@@ -3,7 +3,6 @@ package db
 
 import (
 	"context"
-	"embed"
 	"fmt"
 	"io/fs"
 	"log/slog"
@@ -15,10 +14,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"bemaas/internal/config"
+	"bemaas/migrations"
 )
-
-//go:embed migrations/*.sql
-var migrations embed.FS
 
 func Open(ctx context.Context, cfg config.Database) (*pgxpool.Pool, error) {
 	pc, err := pgxpool.ParseConfig(cfg.DSN())
@@ -44,7 +41,7 @@ func Open(ctx context.Context, cfg config.Database) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-// Migrate chạy lần lượt các tệp migrations/*.sql chưa chạy, mỗi tệp trong một transaction.
+// Migrate chạy lần lượt các tệp migrations/postgres/*.sql chưa chạy, mỗi tệp trong một transaction.
 // Khoá advisory để nhiều bản sao khởi động cùng lúc không chạy chồng nhau.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	conn, err := pool.Acquire(ctx)
@@ -64,13 +61,13 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 		return err
 	}
 
-	names, err := fs.Glob(migrations, "migrations/*.sql")
+	names, err := fs.Glob(migrations.Postgres, "postgres/*.sql")
 	if err != nil {
 		return err
 	}
 	sort.Strings(names)
 	for _, name := range names {
-		version := strings.TrimSuffix(strings.TrimPrefix(name, "migrations/"), ".sql")
+		version := strings.TrimSuffix(strings.TrimPrefix(name, "postgres/"), ".sql")
 		var exists bool
 		if err := conn.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE version=$1)`, version).Scan(&exists); err != nil {
 			return err
@@ -78,7 +75,7 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 		if exists {
 			continue
 		}
-		sql, err := migrations.ReadFile(name)
+		sql, err := migrations.Postgres.ReadFile(name)
 		if err != nil {
 			return err
 		}

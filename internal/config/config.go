@@ -168,17 +168,17 @@ func (s *StringList) UnmarshalYAML(n *yaml.Node) error {
 	return nil
 }
 
-// FindConfig trả đường dẫn config: tham số truyền vào, hoặc ./config.yaml, ./config/config.yaml.
+// FindConfig trả đường dẫn config: tham số truyền vào, hoặc ./configs/config.yaml, ./config.yaml.
 func FindConfig(path string) (string, error) {
 	if path != "" {
 		return path, nil
 	}
-	for _, p := range []string{"config.yaml", "config/config.yaml", "/etc/bemaas/config.yaml"} {
+	for _, p := range []string{"configs/config.yaml", "config.yaml", "/etc/bemaas/config.yaml"} {
 		if _, err := os.Stat(p); err == nil {
 			return p, nil
 		}
 	}
-	return "", fmt.Errorf("không tìm thấy config.yaml (thử ./config.yaml, ./config/config.yaml, /etc/bemaas/config.yaml)")
+	return "", fmt.Errorf("không tìm thấy config.yaml (thử ./configs/config.yaml, ./config.yaml, /etc/bemaas/config.yaml)")
 }
 
 // Load nạp .env (nếu có) vào biến môi trường, đọc config.yaml, thay `${BIẾN}` rồi parse.

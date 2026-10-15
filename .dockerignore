@@ -1,8 +1,9 @@
 bin/
 .env
 .git
-web/node_modules/
-web/dist/
-web/tsconfig.tsbuildinfo
+frontend/node_modules/
+internal/webui/dist/*
+!internal/webui/dist/.gitkeep
+frontend/tsconfig.tsbuildinfo
 prototype/
 *.log

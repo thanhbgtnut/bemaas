@@ -1,11 +1,13 @@
 bin/
 .env
-web/node_modules/
-web/dist/*
-!web/dist/.gitkeep
+frontend/node_modules/
+internal/webui/dist/*
+!internal/webui/dist/.gitkeep
 .DS_Store
-web/tsconfig.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
 bemaas.log
 
 
 
+*.doc
+*.docx

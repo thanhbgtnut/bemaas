@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-	cfgPath := flag.String("config", "", "tệp config YAML (mặc định ./config.yaml)")
+	cfgPath := flag.String("config", "", "tệp config YAML (mặc định ./configs/config.yaml)")
 	envPath := flag.String("env", ".env", "tệp .env")
 	bemaas := flag.String("bemaas", "http://localhost:8080", "địa chỉ bemaas để gửi access log")
 	flag.Parse()

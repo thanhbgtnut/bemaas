@@ -1,0 +1,5 @@
+# Script bash, Makefile và .env.example phải giữ LF kể cả khi checkout trên Windows:
+# CRLF làm bash báo "$'\r': command not found" và dính \r vào giá trị biến của make.
+*.sh          text eol=lf
+Makefile      text eol=lf
+.env.example  text eol=lf

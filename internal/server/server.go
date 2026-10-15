@@ -50,7 +50,7 @@ func New(addr string, a *api.API, authn *auth.Authenticator, ingest app.HandlerF
 func spaHandler(static fs.FS) app.HandlerFunc {
 	index, err := fs.ReadFile(static, "index.html")
 	if err != nil {
-		index = []byte(`<!doctype html><meta charset="utf-8"><p>Chưa build giao diện: chạy <code>make web</code> rồi build lại binary.</p>`)
+		index = []byte(`<!doctype html><meta charset="utf-8"><p>Chưa build giao diện: chạy <code>make build-server</code>.</p>`)
 	}
 	return func(_ context.Context, c *app.RequestContext) {
 		p := strings.TrimPrefix(path.Clean(string(c.Path())), "/")

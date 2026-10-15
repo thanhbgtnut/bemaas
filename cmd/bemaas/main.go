@@ -1,7 +1,7 @@
 // Lệnh bemaas chạy toàn bộ nền tảng MaaS trong một binary: API (Hertz), giao diện React nhúng,
 // Gateway Sync và Budget Enforcer.
 //
-//	bemaas                      chạy server (tự chạy migration), đọc ./config.yaml và ./.env
+//	bemaas                      chạy server (tự chạy migration), đọc ./configs/config.yaml và ./.env
 //	bemaas migrate              chỉ chạy migration rồi thoát
 //	bemaas -config x.yaml -env y.env
 //
@@ -34,7 +34,7 @@ import (
 	"bemaas/internal/mcp"
 	"bemaas/internal/server"
 	"bemaas/internal/storage"
-	"bemaas/web"
+	"bemaas/internal/webui"
 )
 
 func main() {
@@ -45,7 +45,7 @@ func main() {
 }
 
 func run() error {
-	cfgPath := flag.String("config", os.Getenv("BEMAAS_CONFIG"), "tệp config YAML (mặc định ./config.yaml)")
+	cfgPath := flag.String("config", os.Getenv("BEMAAS_CONFIG"), "tệp config YAML (mặc định ./configs/config.yaml)")
 	envDefault := os.Getenv("BEMAAS_ENV")
 	if envDefault == "" {
 		envDefault = ".env"
@@ -132,7 +132,7 @@ func run() error {
 		return out
 	}
 
-	h := server.New(cfg.Server.Addr, api.New(cfg, pool, rc, files, syncer, loc), authn, ingester.Handler(cfg.Ingest.Token), web.Dist(), health)
+	h := server.New(cfg.Server.Addr, api.New(cfg, pool, rc, files, syncer, loc), authn, ingester.Handler(cfg.Ingest.Token), webui.Dist(), health)
 	slog.Info("bemaas đang chạy", "addr", cfg.Server.Addr)
 	h.Spin() // tự dừng êm khi nhận SIGINT/SIGTERM; ctx cũng bị huỷ nên các job nền dừng theo
 	return nil
