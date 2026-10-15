@@ -1,0 +1,67 @@
+{
+  "realm": "maas",
+  "enabled": true,
+  "displayName": "MaaS nội bộ",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "accessTokenLifespan": 900,
+  "clients": [
+    {
+      "clientId": "bemaas-web",
+      "name": "MaaS web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "redirectUris": ["http://localhost:8080/*", "http://localhost:5173/*"],
+      "webOrigins": ["http://localhost:8080", "http://localhost:5173"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8080/*##http://localhost:5173/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-bemaas-web",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "bemaas-web",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@mbai.local",
+      "firstName": "Quản trị",
+      "lastName": "Nền tảng",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }]
+    },
+    {
+      "username": "truongphong",
+      "email": "truongphong@mbai.local",
+      "firstName": "Lan",
+      "lastName": "Nguyễn",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "truongphong123", "temporary": false }]
+    },
+    {
+      "username": "nhanvien",
+      "email": "nhanvien@mbai.local",
+      "firstName": "Minh",
+      "lastName": "Trần",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "nhanvien123", "temporary": false }]
+    }
+  ]
+}

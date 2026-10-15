@@ -1,0 +1,81 @@
+# Cấu hình bemaas. Tệp này được commit và KHÔNG chứa giá trị thật.
+# Mọi giá trị lấy từ biến môi trường theo cú pháp ${BIẾN} hoặc ${BIẾN:-mặc định}.
+# Local: đặt biến trong .env (sao chép từ .env.example). Kubernetes: gắn biến từ ConfigMap/Secret.
+# Biến có sẵn trong môi trường được ưu tiên hơn giá trị trong .env.
+# Không bọc ${...} trong dấu nháy: giá trị có ký tự đặc biệt (:, #, @…) được tự bọc khi nạp.
+
+server:
+  addr: ${SERVER_ADDR:-:8080}
+  timezone: ${SERVER_TIMEZONE:-Asia/Ho_Chi_Minh}
+  platform_admins: ${PLATFORM_ADMINS}          # email, cách nhau bằng dấu phẩy
+
+database:
+  host: ${DB_HOST}
+  port: ${DB_PORT:-5432}
+  user: ${DB_USER}
+  password: ${DB_PASSWORD}
+  name: ${DB_NAME}
+  sslmode: ${DB_SSLMODE:-disable}
+  max_conns: ${DB_MAX_CONNS:-10}
+
+redis:
+  addr: ${REDIS_ADDR}
+  password: ${REDIS_PASSWORD:-}
+  db: ${REDIS_DB:-0}
+  prefix: ${REDIS_PREFIX:-bemaas:}
+
+s3:
+  endpoint: ${S3_ENDPOINT}                     # host:port, không có http://
+  region: ${S3_REGION:-us-east-1}
+  bucket: ${S3_BUCKET}
+  access_key: ${S3_ACCESS_KEY}
+  secret_key: ${S3_SECRET_KEY}
+  use_ssl: ${S3_USE_SSL:-false}
+  path_style: ${S3_PATH_STYLE:-true}
+  url_expiry: ${S3_URL_EXPIRY:-5m}
+
+oidc:
+  issuer: ${OIDC_ISSUER}
+  client_id: ${OIDC_CLIENT_ID}
+  audience: ${OIDC_AUDIENCE:-}                 # để trống thì dùng client_id
+
+gateway:
+  base_url: ${GATEWAY_BASE_URL}
+  key_env: ${GATEWAY_KEY_ENV:-live}
+  sync:
+    mode: ${GATEWAY_SYNC_MODE:-log}            # log | kubernetes
+    interval: ${GATEWAY_SYNC_INTERVAL:-30s}
+    kube:
+      api_server: ${KUBE_API_SERVER:-https://kubernetes.default.svc}
+      namespace: ${KUBE_NAMESPACE:-}
+      token: ${KUBE_TOKEN:-}
+      token_file: ${KUBE_TOKEN_FILE:-/var/run/secrets/kubernetes.io/serviceaccount/token}
+      ca_data: ${KUBE_CA_DATA:-}
+      ca_file: ${KUBE_CA_FILE:-/var/run/secrets/kubernetes.io/serviceaccount/ca.crt}
+      key_configmap: ${KUBE_KEY_CONFIGMAP:-maas-keys}
+      catalog_configmap: ${KUBE_CATALOG_CONFIGMAP:-maas-model-catalog}
+      agw_api_version: ${KUBE_AGW_API_VERSION:-agentgateway.dev/v1alpha1}
+      mcp_backend: ${KUBE_MCP_BACKEND:-maas-mcp}
+      mcp_policy: ${KUBE_MCP_POLICY:-maas-mcp-tools}
+
+# Ingester: agentgateway xuất access log OTLP/HTTP tới POST <bemaas>/ingest/otlp/v1/logs.
+# Tên thuộc tính phải khớp với frontend.accessLog.attributes trên cụm (cần kiểm chứng, luu-y-trien-khai.md).
+ingest:
+  token: ${INGEST_TOKEN}
+  attrs:
+    request_id: ${INGEST_ATTR_REQUEST_ID:-request.id}
+    key_id: ${INGEST_ATTR_KEY_ID:-apiKey.key_id}
+    dept_id: ${INGEST_ATTR_DEPT_ID:-apiKey.dept_id}
+    model: ${INGEST_ATTR_MODEL:-gen_ai.request.model}
+    input_tokens: ${INGEST_ATTR_INPUT_TOKENS:-gen_ai.usage.input_tokens}
+    cache_tokens: ${INGEST_ATTR_CACHE_TOKENS:-gen_ai.usage.cache_read_input_tokens}
+    output_tokens: ${INGEST_ATTR_OUTPUT_TOKENS:-gen_ai.usage.output_tokens}
+    pages: ${INGEST_ATTR_PAGES:-agw.ai.usage.pages}
+    cost: ${INGEST_ATTR_COST:-agw.ai.usage.cost.total}
+    status: ${INGEST_ATTR_STATUS:-http.status}
+    mcp_target: ${INGEST_ATTR_MCP_TARGET:-mcp.target}
+    mcp_tool: ${INGEST_ATTR_MCP_TOOL:-mcp.tool.name}
+
+jobs:
+  enforcer_interval: ${ENFORCER_INTERVAL:-1m}
+  mcp_scan_interval: ${MCP_SCAN_INTERVAL:-5m}   # quét lại tools/list và kiểm tra kết nối MCP server

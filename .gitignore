@@ -1,0 +1,11 @@
+bin/
+.env
+web/node_modules/
+web/dist/*
+!web/dist/.gitkeep
+.DS_Store
+web/tsconfig.tsbuildinfo
+bemaas.log
+
+
+

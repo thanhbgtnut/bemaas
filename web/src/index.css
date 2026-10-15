@@ -1,0 +1,72 @@
+@import "tailwindcss";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-sans/700.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/* Màu và chữ theo mục 4.2 của spec: xanh MB nhạt hơn màu logo, xanh nhạt, trắng. */
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-primary: #2f6bea;     /* nút, link, tab đang chọn */
+  --color-primary-hover: #141ed2; /* xanh logo MB */
+  --color-tint-50: #f2f6fe;
+  --color-tint-100: #e3ecfd;
+  --color-tint-200: #c5d7fb;
+  --color-ink: #0b1342;
+  --color-muted: #475569;
+  --color-subtle: #64748b;
+  --color-mb-red: #eb2d4b;      /* chỉ dùng ở logo */
+
+  --color-ok: #15803d;
+  --color-ok-bg: #dcfce7;
+  --color-warn: #a16207;
+  --color-warn-bg: #fef9c3;
+  --color-bad: #b91c1c;
+  --color-bad-bg: #fee2e2;
+}
+
+@layer base {
+  html { color: var(--color-ink); background: #fff; }
+  body { @apply font-sans antialiased; overflow-x: clip; }
+  :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  /* Ô lưới được co hẹp hơn nội dung: chữ một dòng (truncate) không đẩy lưới tràn ra ngoài màn hình hẹp. */
+  .grid > * { min-width: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+}
+
+/* Thành phần dùng chung. Tailwind v4 dùng @utility để các lớp này dùng được trong @apply và biến thể hover:, md:… */
+@utility btn { @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50; }
+@utility btn-primary { @apply btn bg-primary text-white hover:bg-primary-hover; }
+@utility btn-secondary { @apply btn border border-tint-200 bg-white text-ink hover:bg-tint-50; }
+@utility btn-danger { @apply btn border border-bad/30 bg-white text-bad hover:bg-bad-bg; }
+@utility card { @apply rounded-lg border border-slate-200 bg-white; }
+@utility input { @apply w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm focus:border-primary focus:outline-none; }
+@utility label { @apply mb-1 block text-sm font-medium text-ink; }
+@utility chip { @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs; }
+@utility th { @apply px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-subtle; }
+@utility td { @apply px-3 py-2 text-sm; }
+
+/* Bố cục co giãn theo màn hình: nội dung trải hết chiều ngang, lề trong tăng dần theo cỡ màn.
+   page-x: lề hai bên của header và main. bleed: khối tràn ra sát mép (dải tiêu đề), giữ nội dung thẳng hàng. */
+@utility page-x { @apply w-full px-4 sm:px-6 xl:px-10; }
+@utility bleed { @apply -mx-4 px-4 sm:-mx-6 sm:px-6 xl:-mx-10 xl:px-10; }
+
+/* Nội dung markdown (model card, SKILL.md) */
+.markdown { @apply text-sm leading-relaxed; }
+.markdown h1 { @apply mb-3 mt-6 text-xl font-semibold first:mt-0; }
+.markdown h2 { @apply mb-2 mt-6 text-lg font-semibold first:mt-0; }
+.markdown h3 { @apply mb-2 mt-4 font-semibold; }
+.markdown p { @apply my-2; }
+.markdown ul { @apply my-2 list-disc pl-5; }
+.markdown ol { @apply my-2 list-decimal pl-5; }
+.markdown code { @apply rounded bg-tint-50 px-1 font-mono text-xs; }
+.markdown pre { @apply my-3 overflow-x-auto rounded-md bg-tint-50 p-3; }
+.markdown a { @apply text-primary underline; }
+.markdown table { @apply my-3 w-full text-left; }
+.markdown th, .markdown td { @apply border-b border-slate-200 px-2 py-1; }

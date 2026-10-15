@@ -1,0 +1,52 @@
+# Hạ tầng chạy local cho bemaas. Đọc biến từ ../.env (make infra-up truyền --env-file),
+# nên mật khẩu PostgreSQL, khoá S3, tài khoản Keycloak khai báo một lần trong .env.
+# Backend chạy trên máy (make run), không chạy trong compose, để issuer Keycloak
+# (http://localhost:8180/realms/maas) giống nhau giữa trình duyệt và backend.
+name: bemaas
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-bemaas}
+      POSTGRES_USER: ${DB_USER:-bemaas}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Đặt DB_PASSWORD trong .env}
+    ports: ["${DB_PORT:-5432}:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["${REDIS_PORT:-6380}:6379"]
+
+  # Kho tệp tương thích S3 cho local. Trên môi trường thật thay bằng S3 nội bộ (chỉ đổi .env).
+  # Khoá truy cập lấy từ S3_ACCESS_KEY, S3_SECRET_KEY trong .env.
+  s3:
+    image: chrislusf/seaweedfs:3.97
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?Đặt S3_ACCESS_KEY trong .env}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?Đặt S3_SECRET_KEY trong .env}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        printf '{"identities":[{"name":"bemaas","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","Write","List","Tagging"]}]}' "$$S3_ACCESS_KEY" "$$S3_SECRET_KEY" > /tmp/s3.json
+        exec weed server -dir=/data -s3 -s3.port=9000 -s3.config=/tmp/s3.json -master.volumeSizeLimitMB=256
+    ports: ["9000:9000"]
+    volumes: [s3data:/data]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2
+    command: start-dev --import-realm --http-port=8180
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Đặt KEYCLOAK_ADMIN_PASSWORD trong .env}
+      KC_HOSTNAME: http://localhost:8180
+    ports: ["8180:8180"]
+    volumes: [./keycloak/realm-maas.json:/opt/keycloak/data/import/realm-maas.json:ro]
+
+volumes:
+  pgdata:
+  s3data:
