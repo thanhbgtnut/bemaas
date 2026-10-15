@@ -50,7 +50,7 @@ export default function App({ me }: { me: Me }) {
         <div className="page-x flex h-14 items-center gap-3 xl:gap-6">
           <NavLink to="/models" className="flex shrink-0 items-center gap-2 font-semibold">
             <span className="flex h-7 w-7 items-center justify-center rounded bg-primary text-xs font-bold text-white">
-              M<span className="text-mb-red">·</span>
+              M<span className="text-brand-red">·</span>
             </span>
             MaaS
           </NavLink>

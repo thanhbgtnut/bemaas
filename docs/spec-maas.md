@@ -18,7 +18,7 @@ Các con số trong prototype (đơn giá, lượt gọi, chi phí, lượt cài
 **Ba định hướng [YC]**
 1. **Concept theo GreenNode MaaS** (`docs.greennode.ai/vn/ai-stack/model-as-a-service`): danh mục model, bật/tắt model, Playground, MaaS API, API key, tính phí theo mức dùng, trang Usage.
 2. **Giao diện theo Hugging Face:** danh sách dạng lưới thẻ, bộ lọc dạng chip, trang chi tiết có dải tiêu đề và các tab.
-3. **Màu theo MB, nhạt hơn màu logo;** chủ đạo xanh dương, xanh nhạt và trắng; phù hợp ngành ngân hàng.
+3. **Màu xanh dương nhạt hơn màu logo;** chủ đạo xanh dương, xanh nhạt và trắng; phù hợp ngành ngân hàng.
 
 **Model là dịch vụ [YC].** MaaS cung cấp **dịch vụ mô hình để gọi trực tiếp**, không phải kho weight để tải về tự host. Người dùng không tải, không triển khai, không vận hành model. Mọi dịch vụ model đều được **cung cấp qua agentgateway**. Giao diện theo Hugging Face chỉ là cách trình bày (lưới thẻ, tab, model card); không mang theo các khái niệm của kho weight như tệp model, lượt tải, cây model gốc/fine-tune, hạ tầng triển khai.
 
@@ -56,7 +56,7 @@ Chi tiết cách dùng [ĐX], cần xác nhận khi code:
 | Y3 | Có kho skill; skill là agent skill (file markdown hoặc script) | 7 |
 | Y4 | Bộ skill theo vai trò, để giữ năng lực cho tổ chức | 7.3 |
 | Y5 | Tab Skills là skill hub để chia sẻ với mọi người, không phải công cụ quản trị | 7.1, 17 |
-| Y6 | Màu xanh dương, xanh nhạt, trắng; giống MB nhưng nhạt hơn màu logo; hợp ngành ngân hàng | 4.2 |
+| Y6 | Màu xanh dương, xanh nhạt, trắng; nhạt hơn màu logo; hợp ngành ngân hàng | 4.2 |
 | Y7 | Trải nghiệm đồng nhất giữa các phần | 4.1 |
 | Y8 | Xây cho toàn ngân hàng, không riêng Trung tâm AI hay Khối CNTT | 1 |
 | Y9 | Phần Models theo concept GreenNode | 5, 6, 9 |
@@ -126,12 +126,12 @@ Quy tắc chung: máy chủ kiểm tra quyền ở từng API theo `(vai trò, p
 
 | Vai trò | Giá trị |
 |---|---|
-| Màu chính (nút, link, tab đang chọn) | `#2F6BEA`, nhạt hơn xanh logo MB; tương phản 4,76:1 với chữ trắng |
-| Hover, nhấn | `#141ED2` (xanh logo MB) |
+| Màu chính (nút, link, tab đang chọn) | `#2F6BEA`, nhạt hơn xanh logo; tương phản 4,76:1 với chữ trắng |
+| Hover, nhấn | `#141ED2` (xanh logo) |
 | Nền xanh nhạt | `#F2F6FE`, `#E3ECFD`; viền `#C5D7FB` |
 | Chữ | `#0B1342`; chữ phụ `#475569`, `#64748B` |
 | Nền | trắng |
-| Đỏ MB `#EB2D4B` | chỉ làm điểm nhấn ở logo, không dùng cho trạng thái |
+| Đỏ logo `#EB2D4B` | chỉ làm điểm nhấn ở logo, không dùng cho trạng thái |
 | Trạng thái | xanh lá: tốt; vàng: cảnh báo; đỏ: lỗi hoặc đã thu hồi. Luôn kèm biểu tượng và chữ |
 
 Phông: IBM Plex Sans cho chữ, IBM Plex Mono cho mã, ID và số liệu. Phong cách tối giản, không dùng emoji làm biểu tượng.

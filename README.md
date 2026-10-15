@@ -185,7 +185,7 @@ Thử như sau: vào **Ngân sách & key**, mở chi tiết phòng và cấp m�
 
 ```sh
 docker build --platform linux/amd64 -f cicd/tanzu-dev/Dockerfile.base \
-  -t k8sdev.mbbank.com.vn/cicd-common/bemaas-base:1.0.0 .
+  -t registry.internal/cicd-common/bemaas-base:1.0.0 .
 ```
 
 Build lại base image khi đổi phiên bản Go hoặc `web/package-lock.json`.

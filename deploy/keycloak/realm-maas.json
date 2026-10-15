@@ -38,7 +38,7 @@
   "users": [
     {
       "username": "admin",
-      "email": "admin@mbai.local",
+      "email": "admin@maas.local",
       "firstName": "Quản trị",
       "lastName": "Nền tảng",
       "enabled": true,
@@ -47,7 +47,7 @@
     },
     {
       "username": "truongphong",
-      "email": "truongphong@mbai.local",
+      "email": "truongphong@maas.local",
       "firstName": "Lan",
       "lastName": "Nguyễn",
       "enabled": true,
@@ -56,7 +56,7 @@
     },
     {
       "username": "nhanvien",
-      "email": "nhanvien@mbai.local",
+      "email": "nhanvien@maas.local",
       "firstName": "Minh",
       "lastName": "Trần",
       "enabled": true,

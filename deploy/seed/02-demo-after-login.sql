@@ -1,4 +1,4 @@
--- Dữ liệu mẫu cần người dùng thật: chạy SAU KHI admin@, truongphong@, nhanvien@mbai.local đã đăng nhập ít nhất một lần
+-- Dữ liệu mẫu cần người dùng thật: chạy SAU KHI admin@, truongphong@, nhanvien@maas.local đã đăng nhập ít nhất một lần
 -- (bemaas tạo app_user từ claim `sub` của Keycloak khi đăng nhập).
 -- Gán quản trị phòng, thành viên, tạo 2 key và 30 ngày dữ liệu sử dụng giả lập.
 
@@ -6,9 +6,9 @@ DO $$
 DECLARE
   v_admin text; v_lead text; v_staff text; v_dept uuid; v_app uuid; v_member uuid; d int; m text;
 BEGIN
-  SELECT id INTO v_admin FROM app_user WHERE email = 'admin@mbai.local';
-  SELECT id INTO v_lead  FROM app_user WHERE email = 'truongphong@mbai.local';
-  SELECT id INTO v_staff FROM app_user WHERE email = 'nhanvien@mbai.local';
+  SELECT id INTO v_admin FROM app_user WHERE email = 'admin@maas.local';
+  SELECT id INTO v_lead  FROM app_user WHERE email = 'truongphong@maas.local';
+  SELECT id INTO v_staff FROM app_user WHERE email = 'nhanvien@maas.local';
   IF v_admin IS NULL OR v_lead IS NULL OR v_staff IS NULL THEN
     RAISE EXCEPTION 'Cần đăng nhập bằng cả 3 tài khoản mẫu trước khi chạy script này';
   END IF;

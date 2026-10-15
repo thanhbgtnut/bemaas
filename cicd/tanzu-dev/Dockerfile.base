@@ -12,11 +12,11 @@
 #
 # Build từ thư mục gốc bemaas (linux/amd64, chạy được cả trên Mac ARM):
 #   docker build --platform linux/amd64 -f cicd/tanzu-dev/Dockerfile.base \
-#     -t k8sdev.mbbank.com.vn/cicd-common/bemaas-base:1.0.0 .
-#   docker push k8sdev.mbbank.com.vn/cicd-common/bemaas-base:1.0.0
+#     -t registry.internal/cicd-common/bemaas-base:1.0.0 .
+#   docker push registry.internal/cicd-common/bemaas-base:1.0.0
 #
 # Không push được từ máy có internet thì chuyển bằng tệp:
-#   docker save k8sdev.mbbank.com.vn/cicd-common/bemaas-base:1.0.0 | gzip > bemaas-base-1.0.0.tar.gz
+#   docker save registry.internal/cicd-common/bemaas-base:1.0.0 | gzip > bemaas-base-1.0.0.tar.gz
 #   (trong mạng nội bộ) docker load < bemaas-base-1.0.0.tar.gz && docker push ...
 #
 # Build lại (và tăng tag, sửa BASE_IMAGE trong Dockerfile) khi: đổi phiên bản Go trong go.mod,

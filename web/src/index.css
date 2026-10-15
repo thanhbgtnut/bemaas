@@ -6,20 +6,20 @@
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
 
-/* Màu và chữ theo mục 4.2 của spec: xanh MB nhạt hơn màu logo, xanh nhạt, trắng. */
+/* Màu và chữ theo mục 4.2 của spec: xanh dương nhạt hơn màu logo, xanh nhạt, trắng. */
 @theme {
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   --color-primary: #2f6bea;     /* nút, link, tab đang chọn */
-  --color-primary-hover: #141ed2; /* xanh logo MB */
+  --color-primary-hover: #141ed2; /* xanh logo */
   --color-tint-50: #f2f6fe;
   --color-tint-100: #e3ecfd;
   --color-tint-200: #c5d7fb;
   --color-ink: #0b1342;
   --color-muted: #475569;
   --color-subtle: #64748b;
-  --color-mb-red: #eb2d4b;      /* chỉ dùng ở logo */
+  --color-brand-red: #eb2d4b;      /* chỉ dùng ở logo */
 
   --color-ok: #15803d;
   --color-ok-bg: #dcfce7;

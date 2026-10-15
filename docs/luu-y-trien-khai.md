@@ -44,7 +44,7 @@ Lập luận để trình ATTT: với quyền này MaaS chỉ sửa được n�
 - [ ] Metadata **chỉ chứa mã định danh**, không ghi họ tên hay email. Key ứng dụng ghi mã ứng dụng thay cho `owner_id`.
 - [ ] Access log xuất OTLP, thêm các trường `apiKey.key_id`, `apiKey.owner_id`, `apiKey.dept_id` (`frontend.accessLog.attributes.add`).
 - [ ] Đích OTLP/HTTP của access log là Ingester của MaaS: `POST http://<bemaas>:8080/ingest/otlp/v1/logs`, header `Authorization: Bearer <INGEST_TOKEN>` (protobuf hoặc JSON, có thể gzip). Tên thuộc tính trong log phải khớp các biến `INGEST_ATTR_*` trong `.env` của MaaS; mặc định: `request.id`, `apiKey.key_id`, `apiKey.dept_id`, `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.cache_read_input_tokens`, `gen_ai.usage.output_tokens`, `agw.ai.usage.pages`, `agw.ai.usage.cost.total`, `http.status`, `mcp.target`, `mcp.tool.name`. Log không có `agw.ai.usage.cost.total` thì MaaS tự tính theo bảng giá của mình.
-- [ ] CORS trên gateway cho origin của MaaS (ví dụ `https://maas.mbai.local`), cho phép header `Authorization`, `Content-Type`, `anthropic-version`, `x-api-key`: Playground trên trình duyệt gọi thẳng gateway bằng key của người dùng.
+- [ ] CORS trên gateway cho origin của MaaS (ví dụ `https://maas.maas.local`), cho phép header `Authorization`, `Content-Type`, `anthropic-version`, `x-api-key`: Playground trên trình duyệt gọi thẳng gateway bằng key của người dùng.
 - [ ] Bảng giá model (`catalog.json`) do MaaS sinh từ bảng giá của mình, để log có chi phí USD.
 - [ ] Rate limit làm lưới an toàn:
   - theo key: token theo ngày, khoá `apiKey.key_id`;

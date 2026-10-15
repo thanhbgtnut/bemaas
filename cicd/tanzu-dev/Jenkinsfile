@@ -12,10 +12,12 @@ node("${NODE_INTEGRATION_TEAM_MGT}") {
      * kubernetes_namespace: namespace of K8S
      */
     def project_name = "ai-maas-bemaas-mcrs"
-    def kubernetes_namespace = "dev-aicv"
+    def kubernetes_namespace = "dev-maas"
     
     // ===================================================================================
     def image_version = "1.0.0"
+    // TODO: Go proxy noi bo (Nexus/Athens), vi du http://<nexus-host>/repository/go-proxy/,direct
+    def go_proxy = "https://proxy.golang.org,direct"
     def chart_version = "0.1.${BUILD_NUMBER}"
     def environment = "L01"
     def secret_key = "${project_name}".split('-canary')[0]
@@ -36,7 +38,7 @@ node("${NODE_INTEGRATION_TEAM_MGT}") {
 
     // ===================================================================================
     
-    ci_common(project_name, docker_prefix, image_version, harbor_host, helm_template, Options, sub_path)
+    ci_common(project_name, docker_prefix, image_version, harbor_host, helm_template, Options, sub_path, go_proxy)
     try {
         def arrProject = environment.split(' ')
         def stages = [failFast: true]
@@ -46,15 +48,8 @@ node("${NODE_INTEGRATION_TEAM_MGT}") {
                 switch(env) {
                     case "L01":
                         helm_host = "${helm_host_argocd}"
-                        /*
-                        * TODO : Truy thong tin cum
-                        **** dev <=> dev-tanzu01
-                        **** uat <=> uat-tanzu01
-                        **** uddn <=> tanzu-mb-dev-uddn-cluster
-                        **** paygate <=> tanzu-dev-paygate-cluster-01
-                        **** mlops <=> tanzu-mb-dev-mlops-cluster
-                        */
-                        env_argocd = "ai"
+                        // TODO: ten cum ArgoCD dich
+                        env_argocd = "dev"
                         break
                     }
                 stage("Start ${arrProject[i]} Environment"){
@@ -73,14 +68,14 @@ node("${NODE_INTEGRATION_TEAM_MGT}") {
     }
 }
 
-def ci_common(def project_name, def docker_prefix, def image_version, def harbor_host, def helm_template, def Options, def sub_path) {
+def ci_common(def project_name, def docker_prefix, def image_version, def harbor_host, def helm_template, def Options, def sub_path, def go_proxy) {
     stage('Git clone') {
         script { ci_common_java () }
     }
 
     stage('Docker build') {
         // Base image (Go, Node, module cache, node_modules) build sẵn từ cicd/${sub_path}/Dockerfile.base.
-        app = docker.build("${docker_prefix}/${project_name}:${image_version}", "-f ./cicd/${sub_path}/Dockerfile .")
+        app = docker.build("${docker_prefix}/${project_name}:${image_version}", "--build-arg GOPROXY=${go_proxy} -f ./cicd/${sub_path}/Dockerfile .")
         sh "docker push ${docker_prefix}/${project_name}:${image_version}"
     }
 }

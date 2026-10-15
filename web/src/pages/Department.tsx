@@ -297,7 +297,7 @@ function Members({ dept, canManage }: { dept: Department; canManage: boolean }) 
       <ErrorBox error={error ?? actionError} />
       {canManage && (
         <form onSubmit={add} className="mb-3 flex flex-col gap-2 sm:flex-row">
-          <input className="input sm:max-w-sm" type="email" required placeholder="email@mbai.local" aria-label="Email thành viên" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input className="input sm:max-w-sm" type="email" required placeholder="email@maas.local" aria-label="Email thành viên" value={email} onChange={(e) => setEmail(e.target.value)} />
           <button className="btn-primary">Thêm thành viên</button>
         </form>
       )}

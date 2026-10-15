@@ -355,7 +355,7 @@ function Roles() {
   return (
     <div className="max-w-3xl space-y-4">
       <form onSubmit={(e) => { e.preventDefault(); setGrant(role, email, true) }} className="flex flex-col gap-2 sm:flex-row">
-        <input className="input sm:max-w-sm" type="email" required placeholder="email@mbai.local" aria-label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="input sm:max-w-sm" type="email" required placeholder="email@maas.local" aria-label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <select className="input sm:w-auto" aria-label="Vai trò" value={role} onChange={(e) => setRole(e.target.value as 'platform' | 'auditor')}>
           <option value="auditor">Kiểm soát (chỉ xem)</option><option value="platform">Quản trị nền tảng</option>
         </select>

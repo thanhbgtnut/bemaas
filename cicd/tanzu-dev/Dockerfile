@@ -1,14 +1,16 @@
 # Stage 1: build giao diện và binary.
 # Base image (cicd/tanzu-dev/Dockerfile.base) đã có Go, Node, Go module cache và node_modules
 # của web/, nên bước này không cần apt / npm.
-ARG BASE_IMAGE=k8sdev.mbbank.com.vn/cicd-common/bemaas-base:1.0.0
-ARG RUNTIME_IMAGE=k8sdev.mbbank.com.vn/cicd-common/debian:bookworm-slim
+ARG BASE_IMAGE=registry.internal/cicd-common/bemaas-base:1.0.0
+ARG RUNTIME_IMAGE=registry.internal/cicd-common/debian:bookworm-slim
 
 FROM ${BASE_IMAGE} AS builder
 
 LABEL stage=gobuilder
 
-ENV GOPROXY=http://10.1.12.177:8445/repository/repo-go-proxy/,direct
+# Go proxy nội bộ (Nexus/Athens); truyền --build-arg GOPROXY=... khi build.
+ARG GOPROXY=https://proxy.golang.org,direct
+ENV GOPROXY=${GOPROXY}
 ENV GOSUMDB=off
 
 COPY . /app
