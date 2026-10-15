@@ -1,0 +1,129 @@
+##### Các trường khai báo bắt buộc ######
+# So luong pod duoc tao
+replicaCount: 1
+
+# Khai bao service
+## Type = NodePort cap nhat cac truong (nodePort,port,targetPort)
+## Type = LoadBalancer cap nhat cac truong (port,targetPort,loadBalancerIP)
+## Type = ClusterIP cap nhat cac truong (port,targetPort)
+service:
+  type: ClusterIP
+  # nodePort: 8080
+  port: 8080
+  targetPort: 8080
+
+# Khai bao hostnames
+hostAliases:
+
+
+# Khai bao su dung configmap
+configMaps:
+  - app.env
+
+# Khai bao su dung PVC
+pvc: false
+namePVC:
+  - pvc-mskyso
+
+# Khai bao volumeMount
+volumeMountsMap:
+  mountPathconfig: /deployment/config
+  mountPathpodinfo: /deployment/podinfo
+  mountPathcommon: /deployment/common/config
+  mountPathPVC:
+    pvc-mskyso: /data
+
+#Khai bao tai nguyen su dung cho pod
+resources:
+  limits:
+    memory: 1Gi
+  requests:
+    memory: 256Mi
+
+# Khai bao promethus (bemaas chua co /metrics)
+promethus: false
+podAnnotations: {}
+
+# Khai bao label cho istio
+labels: false
+templateLabels:
+  version: old
+  sidecar.istio.io/inject: "true"
+
+# Khai bao HealthCheck
+healthCheck: true
+startupProbe:
+  failureThreshold: 60
+  httpGet:
+    path: /healthz
+    port: 8080
+    scheme: HTTP
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 2
+livenessProbe:
+  failureThreshold: 10
+  httpGet:
+    path: /healthz
+    port: 8080
+    scheme: HTTP
+  periodSeconds: 60
+  successThreshold: 1
+  timeoutSeconds: 2
+readinessProbe:
+  failureThreshold: 10
+  httpGet:
+    path: /healthz
+    port: 8080
+    scheme: HTTP
+  periodSeconds: 60
+  successThreshold: 1
+  timeoutSeconds: 2
+
+Command:
+  # -- Options: [java, golang, dotnet, python-uvicorn, python-gunicorn, python, angular, manual]
+  option: golang
+  binaryfile: bemaas
+
+# Khai bao bien moi truong
+# Them active profile va config location
+ENV_PROFILE: tanzu-dev
+JVM_OPTS: ""
+
+# Chi dinh pod chay tren node co dinh(chi dung tren live: default hoac ecm)
+NodeSelectorEnable: false
+nodeName: default
+
+# So lan deploy Helm
+numberHelm: H1
+
+# Thong tin image
+image:
+  repository: image_version
+  pullPolicy: Always
+  tag: "image_tag"
+
+# Khai bao secret-registry harbor
+imagePullSecrets:
+  - name: harbor-secret-registry
+
+# Service Account
+serviceAccount:
+  create: true
+  name: k8s_sa
+
+####### Các options được bổ sung và có thể được xóa bỏ khi không cần thiết #######
+# Run container as non root user
+# User: appadmin, UID 10000
+# User: nginx, UID 101
+# Khai bao user
+podSecurityContext:
+  enabled: true
+  fsGroup: 10000
+  
+### Configure Container Security Context
+containerSecurityContext:
+  enabled: true
+  runAsUser: 10000
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true

@@ -1,0 +1,86 @@
+#!/usr/bin/env groovy
+library('cicd-shared-lib-dev@tanzu') _
+
+import java.text.SimpleDateFormat
+
+node("${NODE_INTEGRATION_TEAM_MGT}") {
+    // =================================================================================
+    /**
+     * TODO: Chi thay doi 2 thong tin tren tuong ung voi project
+     *
+     * project_name: Name of project
+     * kubernetes_namespace: namespace of K8S
+     */
+    def project_name = "ai-maas-bemaas-mcrs"
+    def kubernetes_namespace = "dev-aicv"
+    
+    // ===================================================================================
+    def image_version = "1.0.0"
+    def chart_version = "0.1.${BUILD_NUMBER}"
+    def environment = "L01"
+    def secret_key = "${project_name}".split('-canary')[0]
+    def secret_value =  sh(script: "echo -n '${secret_key}' | sha1sum | head -c 40", returnStdout: true)
+    def harbor_host = vault path: 'cicd/harbor', key: 'harbor_tanzu_dev', credentialsId: 'vault-token-dev', engineVersion: "2"
+    def helm_template = vault path: 'cicd/helm', key: 'helm_template_common', credentialsId: 'vault-token-dev', engineVersion: "2"
+    def helm_host_argocd = "argocd-helm-tanzu-dev-L01"
+    def docker_prefix = "${harbor_host}/${kubernetes_namespace}"
+    // ===================================================================================
+    
+    /**
+     * TODO: Chon luong deploy
+     * Deploy theo luong argocd : CICD-ARGOCD
+     * Deploy theo luong helm : CICD-HELM
+     */
+    def Options = "CICD-HELM"
+    def sub_path = "tanzu-dev"
+
+    // ===================================================================================
+    
+    ci_common(project_name, docker_prefix, image_version, harbor_host, helm_template, Options, sub_path)
+    try {
+        def arrProject = environment.split(' ')
+        def stages = [failFast: true]
+        if(arrProject.length > 0 ){
+            for (int i = 0; i < arrProject.length; i++) {
+                def env = arrProject[i];
+                switch(env) {
+                    case "L01":
+                        helm_host = "${helm_host_argocd}"
+                        /*
+                        * TODO : Truy thong tin cum
+                        **** dev <=> dev-tanzu01
+                        **** uat <=> uat-tanzu01
+                        **** uddn <=> tanzu-mb-dev-uddn-cluster
+                        **** paygate <=> tanzu-dev-paygate-cluster-01
+                        **** mlops <=> tanzu-mb-dev-mlops-cluster
+                        */
+                        env_argocd = "ai"
+                        break
+                    }
+                stage("Start ${arrProject[i]} Environment"){
+                    script {
+                        service_account_common(project_name, env, secret_key, secret_value, sub_path)
+                        helm_pack_common(project_name, env, helm_host, helm_template, docker_prefix, image_version, Options, chart_version, sub_path) 
+                        cd_common(project_name, helm_host, arrProject, stages, docker_prefix, image_version, env, Options, kubernetes_namespace, env_argocd, chart_version) 
+                    }
+                }
+            }
+        }
+        //parallel stages
+    } catch (Exception ex) {
+        currentBuild.result = "Failed"
+        throw ex
+    }
+}
+
+def ci_common(def project_name, def docker_prefix, def image_version, def harbor_host, def helm_template, def Options, def sub_path) {
+    stage('Git clone') {
+        script { ci_common_java () }
+    }
+
+    stage('Docker build') {
+        // Base image (Go, Node, module cache, node_modules) build sẵn từ cicd/${sub_path}/Dockerfile.base.
+        app = docker.build("${docker_prefix}/${project_name}:${image_version}", "-f ./cicd/${sub_path}/Dockerfile .")
+        sh "docker push ${docker_prefix}/${project_name}:${image_version}"
+    }
+}

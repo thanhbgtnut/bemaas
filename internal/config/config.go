@@ -25,6 +25,7 @@ type Config struct {
 	Gateway  Gateway  `yaml:"gateway"`
 	Ingest   Ingest   `yaml:"ingest"`
 	Jobs     Jobs     `yaml:"jobs"`
+	Log      Log      `yaml:"log"`
 }
 
 type Server struct {
@@ -132,6 +133,13 @@ type IngestAttrs struct {
 	Status       string `yaml:"status"`
 	MCPTarget    string `yaml:"mcp_target"`
 	MCPTool      string `yaml:"mcp_tool"`
+}
+
+// Log: luôn ghi stdout; đặt File thì ghi thêm vào tệp, xoay bằng lumberjack.
+type Log struct {
+	File    string `yaml:"file"`     // để trống: chỉ ghi stdout
+	MaxSize int    `yaml:"max_size"` // MB, đầy thì xoay sang tệp mới
+	MaxAge  int    `yaml:"max_age"`  // số ngày giữ tệp đã xoay; 0: giữ mãi
 }
 
 type Jobs struct {

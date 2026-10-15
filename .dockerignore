@@ -1,5 +1,8 @@
 bin/
 .env
+.git
 web/node_modules/
 web/dist/
-.git
+web/tsconfig.tsbuildinfo
+prototype/
+*.log

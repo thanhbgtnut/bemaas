@@ -1,0 +1,53 @@
+# syntax=docker/dockerfile:1
+#
+# Base build image cho bemaas. Build MỘT LẦN trên máy CÓ internet, push lên Harbor nội bộ;
+# bản build CI (cicd/tanzu-dev/Dockerfile) bắt đầu FROM image này nên không cần apt / npm /
+# GitHub, chỉ cần Nexus Go proxy nội bộ cho module thêm sau khi build base.
+#
+# Nội dung:
+#   - Go toolchain (theo go.mod), tzdata, ca-certificates   (từ image golang chính thức)
+#   - Node.js + npm                                         (build giao diện web/)
+#   - Go module cache tải sẵn từ go.mod / go.sum
+#   - node_modules của web/ trong /opt/web                  (từ web/package-lock.json, bản linux)
+#
+# Build từ thư mục gốc bemaas (linux/amd64, chạy được cả trên Mac ARM):
+#   docker build --platform linux/amd64 -f cicd/tanzu-dev/Dockerfile.base \
+#     -t k8sdev.mbbank.com.vn/cicd-common/bemaas-base:1.0.0 .
+#   docker push k8sdev.mbbank.com.vn/cicd-common/bemaas-base:1.0.0
+#
+# Không push được từ máy có internet thì chuyển bằng tệp:
+#   docker save k8sdev.mbbank.com.vn/cicd-common/bemaas-base:1.0.0 | gzip > bemaas-base-1.0.0.tar.gz
+#   (trong mạng nội bộ) docker load < bemaas-base-1.0.0.tar.gz && docker push ...
+#
+# Build lại (và tăng tag, sửa BASE_IMAGE trong Dockerfile) khi: đổi phiên bản Go trong go.mod,
+# hoặc đổi web/package-lock.json. Chỉ thêm Go module mới thì không cần build lại.
+
+ARG GO_IMAGE=golang:1.26-bookworm
+ARG NODE_IMAGE=node:22-bookworm-slim
+
+FROM ${NODE_IMAGE} AS node
+
+FROM ${GO_IMAGE}
+
+# Node.js + npm chép từ image chính thức (không cần apt).
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+ && ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
+ && node --version && npm --version
+
+# Không bao giờ tải Go toolchain khác trong CI.
+ENV GOTOOLCHAIN=local
+
+# Go module cache.
+WORKDIR /opt/gomod
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Thư viện giao diện. Giữ lại package-lock.json để bản build CI phát hiện lệch phiên bản.
+# npm ci chạy trên linux/amd64 nên cài đúng gói native (esbuild, rollup, tailwind oxide) bản linux.
+WORKDIR /opt/web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci && npm cache clean --force
+
+WORKDIR /

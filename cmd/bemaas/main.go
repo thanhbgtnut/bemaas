@@ -12,13 +12,16 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"gopkg.in/natefinch/lumberjack.v2"
 
 	"bemaas/internal/api"
 	"bemaas/internal/auth"
@@ -43,7 +46,11 @@ func main() {
 
 func run() error {
 	cfgPath := flag.String("config", os.Getenv("BEMAAS_CONFIG"), "tệp config YAML (mặc định ./config.yaml)")
-	envPath := flag.String("env", ".env", "tệp .env nạp vào biến môi trường; biến có sẵn được ưu tiên")
+	envDefault := os.Getenv("BEMAAS_ENV")
+	if envDefault == "" {
+		envDefault = ".env"
+	}
+	envPath := flag.String("env", envDefault, "tệp .env nạp vào biến môi trường (mặc định BEMAAS_ENV hoặc ./.env); biến có sẵn được ưu tiên")
 	flag.Parse()
 
 	cfg, err := config.Load(*cfgPath, *envPath)
@@ -53,6 +60,13 @@ func run() error {
 	loc, err := time.LoadLocation(cfg.Server.Timezone)
 	if err != nil {
 		return fmt.Errorf("server.timezone: %w", err)
+	}
+	if cfg.Log.File != "" {
+		lj := &lumberjack.Logger{Filename: cfg.Log.File, MaxSize: cfg.Log.MaxSize, MaxAge: cfg.Log.MaxAge, LocalTime: true}
+		defer lj.Close()
+		out := io.MultiWriter(os.Stdout, lj)
+		slog.SetDefault(slog.New(slog.NewTextHandler(out, nil)))
+		hlog.SetOutput(out)
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

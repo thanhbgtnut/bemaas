@@ -76,6 +76,11 @@ ingest:
     mcp_target: ${INGEST_ATTR_MCP_TARGET:-mcp.target}
     mcp_tool: ${INGEST_ATTR_MCP_TOOL:-mcp.tool.name}
 
+log:
+  file: ${LOG_FILE:-}                          # để trống: chỉ ghi stdout
+  max_size: ${LOG_MAX_SIZE:-100}               # MB, đầy thì xoay sang tệp mới
+  max_age: ${LOG_MAX_AGE:-7}                   # số ngày giữ tệp đã xoay, cũ hơn tự xoá; 0: giữ mãi
+
 jobs:
   enforcer_interval: ${ENFORCER_INTERVAL:-1m}
   mcp_scan_interval: ${MCP_SCAN_INTERVAL:-5m}   # quét lại tools/list và kiểm tra kết nối MCP server
