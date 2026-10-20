@@ -11,3 +11,6 @@ bemaas.log
 
 *.doc
 *.docx
+
+
+/bin

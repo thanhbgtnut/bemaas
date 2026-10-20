@@ -59,6 +59,7 @@ func (d Database) DSN() string {
 
 type Redis struct {
 	Addr     string `yaml:"addr"`
+	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	DB       int    `yaml:"db"`
 	Prefix   string `yaml:"prefix"`

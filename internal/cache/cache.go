@@ -21,7 +21,7 @@ type Cache struct {
 
 func New(cfg config.Redis) *Cache {
 	return &Cache{
-		rdb:    redis.NewClient(&redis.Options{Addr: cfg.Addr, Password: cfg.Password, DB: cfg.DB}),
+		rdb:    redis.NewClient(&redis.Options{Addr: cfg.Addr, Username: cfg.Username, Password: cfg.Password, DB: cfg.DB}),
 		prefix: cfg.Prefix,
 	}
 }

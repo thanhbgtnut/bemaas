@@ -20,6 +20,7 @@ database:
 
 redis:
   addr: ${REDIS_ADDR}
+  username: ${REDIS_USERNAME:-}     # ACL user (Redis 6+); rỗng = user "default"
   password: ${REDIS_PASSWORD:-}
   db: ${REDIS_DB:-0}
   prefix: ${REDIS_PREFIX:-bemaas:}
