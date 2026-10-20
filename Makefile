@@ -64,7 +64,7 @@ reset-db: ## Xoá volume dữ liệu rồi bật lại hạ tầng
 	$(COMPOSE) down -v && $(MAKE) up
 
 .PHONY: migrate
-migrate: env ## Chạy migration (migrations/postgres) rồi thoát
+migrate: ## Chạy migration (migrations/postgres) rồi thoát
 	go run ./cmd/bemaas -config $(CONFIG) -env $(ENV_FILE) migrate
 
 .PHONY: seed
@@ -76,7 +76,7 @@ seed-demo: ## Dữ liệu minh hoạ; chạy sau khi 3 tài khoản mẫu đã �
 	$(PSQL) < deploy/seed/02-demo-after-login.sql
 
 .PHONY: run
-run: env ## Chạy backend :8080 (giao diện lấy từ bản build gần nhất)
+run: ## Chạy backend :8080 (giao diện lấy từ bản build gần nhất)
 	go run ./cmd/bemaas -config $(CONFIG) -env $(ENV_FILE)
 
 .PHONY: dev
@@ -88,7 +88,7 @@ run-web: ## Chạy cùng lúc backend :8080 và Vite dev server :5173
 	./scripts/run-web.sh
 
 .PHONY: devmock
-devmock: env ## CHỈ LOCAL: agentgateway giả :8090, MCP server giả :8092
+devmock: ## CHỈ LOCAL: agentgateway giả :8090, MCP server giả :8092
 	go run ./cmd/devmock -config $(CONFIG) -env $(ENV_FILE)
 
 .PHONY: clean
