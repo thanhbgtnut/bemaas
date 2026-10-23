@@ -42,10 +42,13 @@ type claims struct {
 	Email             string `json:"email"`
 	Name              string `json:"name"`
 	PreferredUsername string `json:"preferred_username"`
+	Azp               string `json:"azp"`
 }
 
 type Authenticator struct {
 	verifier       *oidc.IDTokenVerifier
+	audience       string
+	clientID       string
 	db             *pgxpool.Pool
 	cache          *cache.Cache
 	platformAdmins []string
@@ -56,13 +59,13 @@ func New(ctx context.Context, cfg config.OIDC, platformAdmins []string, db *pgxp
 	if err != nil {
 		return nil, fmt.Errorf("không đọc được cấu hình OIDC của %s: %w", cfg.Issuer, err)
 	}
-	// go-oidc kiểm chữ ký theo JWKS của realm, cùng `iss`, `aud`, `exp`.
-	v := provider.Verifier(&oidc.Config{ClientID: cfg.Audience})
+	// go-oidc kiểm chữ ký theo JWKS của realm, cùng `iss`, `exp`; `aud`/`azp` kiểm ở forClient.
+	v := provider.Verifier(&oidc.Config{SkipClientIDCheck: true})
 	admins := make([]string, 0, len(platformAdmins))
 	for _, e := range platformAdmins {
 		admins = append(admins, strings.ToLower(strings.TrimSpace(e)))
 	}
-	return &Authenticator{verifier: v, db: db, cache: c, platformAdmins: admins}, nil
+	return &Authenticator{verifier: v, audience: cfg.Audience, clientID: cfg.ClientID, db: db, cache: c, platformAdmins: admins}, nil
 }
 
 const principalKey = "principal"
@@ -82,7 +85,7 @@ func (a *Authenticator) Middleware() app.HandlerFunc {
 			return
 		}
 		var cl claims
-		if err := idt.Claims(&cl); err != nil || cl.Sub == "" {
+		if err := idt.Claims(&cl); err != nil || cl.Sub == "" || !forClient(idt.Audience, cl.Azp, a.audience, a.clientID) {
 			httpx.Fail(c, httpx.ErrUnauthorized)
 			return
 		}
@@ -96,6 +99,12 @@ func (a *Authenticator) Middleware() app.HandlerFunc {
 		c.Set(principalKey, p)
 		c.Next(ctx)
 	}
+}
+
+// forClient: token cấp cho bemaas khi `aud` chứa audience (realm có Audience mapper),
+// hoặc `azp` là client của giao diện (Keycloak không cấu hình audience thì `aud` chỉ có "account").
+func forClient(aud []string, azp, audience, clientID string) bool {
+	return slices.Contains(aud, audience) || azp == clientID
 }
 
 func PrincipalCacheKey(userID string) string { return "me:" + userID }

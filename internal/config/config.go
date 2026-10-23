@@ -79,7 +79,7 @@ type S3 struct {
 type OIDC struct {
 	Issuer   string `yaml:"issuer"`    // URL realm của Keycloak
 	ClientID string `yaml:"client_id"` // client public mà giao diện React dùng (PKCE)
-	Audience string `yaml:"audience"`  // giá trị `aud` bắt buộc trong access token
+	Audience string `yaml:"audience"`  // `aud` chấp nhận trong access token; không có thì `azp` phải là ClientID
 }
 
 type Gateway struct {

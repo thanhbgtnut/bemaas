@@ -82,7 +82,7 @@ export type Model = {
   id: string; name: string; provider_team: string; type: 'chat' | 'embedding' | 'rerank' | 'document'
   // standard: id chuẩn API (GET /standards); modes: các thao tác của chuẩn mà model hỗ trợ; unit: đơn vị tính giá
   standard: string; unit: 'token' | 'page'; modes: string[]; use_cases: string[]; status: 'production' | 'beta'; data_level: 'noi_bo' | 'mat'
-  deploy: string; endpoint: string; context_length: number | null; enabled: boolean
+  deploy: string; base_url: string; endpoint: string; context_length: number | null; enabled: boolean
   description: string; card?: string
   price: Price | null; calls_30d: number; likes: number; liked_by_me: boolean
 }

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 	"slices"
 	"strings"
 	"time"
@@ -38,6 +39,7 @@ type Model struct {
 	Status        string          `json:"status"`
 	DataLevel     string          `json:"data_level"`
 	Deploy        string          `json:"deploy"`
+	BaseURL       string          `json:"base_url"` // rỗng = GATEWAY_BASE_URL
 	Endpoint      string          `json:"endpoint"`
 	ContextLength *int            `json:"context_length"`
 	Enabled       bool            `json:"enabled"`
@@ -54,7 +56,7 @@ const modelListKey = "models:list"
 
 const modelSelect = `
 	SELECT m.id, m.name, m.provider_team, m.type, m.modes, m.use_cases, m.status, m.data_level, m.deploy,
-	       m.endpoint, m.context_length, m.enabled, m.standard, m.description,
+	       m.base_url, m.endpoint, m.context_length, m.enabled, m.standard, m.description,
 	       p.provider_id, p.input, p.output, p.cache_read, p.per_page,
 	       (SELECT count(*) FROM usage_event u WHERE u.model_id = m.id AND u.ts > now() - interval '30 days'),
 	       (SELECT count(*) FROM model_like l WHERE l.model_id = m.id)
@@ -65,7 +67,7 @@ func scanModel(row pgx.Row) (*Model, error) {
 	var provider *string
 	var in, out, cr, pp *decimal.Decimal
 	err := row.Scan(&m.ID, &m.Name, &m.ProviderTeam, &m.Type, &m.Modes, &m.UseCases, &m.Status, &m.DataLevel, &m.Deploy,
-		&m.Endpoint, &m.ContextLength, &m.Enabled, &m.Standard, &m.Description,
+		&m.BaseURL, &m.Endpoint, &m.ContextLength, &m.Enabled, &m.Standard, &m.Description,
 		&provider, &in, &out, &cr, &pp, &m.Calls30d, &m.Likes)
 	if err != nil {
 		return nil, err
@@ -189,6 +191,7 @@ type modelInput struct {
 	Status        string          `json:"status"`
 	DataLevel     string          `json:"data_level"`
 	Deploy        string          `json:"deploy"`
+	BaseURL       string          `json:"base_url"`
 	Endpoint      string          `json:"endpoint"`
 	ContextLength *int            `json:"context_length"`
 	Type          string          `json:"-"` // suy ra từ chuẩn, không nhận từ client
@@ -216,6 +219,12 @@ func (m *modelInput) normalize(id string) error {
 	for _, op := range m.Modes {
 		if !slices.Contains(ops, op) {
 			return httpx.BadRequest("Chuẩn " + std.Name + " không có thao tác " + op)
+		}
+	}
+	m.BaseURL = strings.TrimRight(strings.TrimSpace(m.BaseURL), "/")
+	if m.BaseURL != "" {
+		if u, err := url.Parse(m.BaseURL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			return httpx.BadRequest("Base URL phải dạng http(s)://host[:port][/path]")
 		}
 	}
 	if m.Endpoint == "" {
@@ -260,10 +269,10 @@ func (a *API) createModel(ctx context.Context, c *app.RequestContext) {
 	err := a.tx(ctx, func(tx pgx.Tx) error {
 		_, err := tx.Exec(ctx, `
 			INSERT INTO model (id, name, provider_team, type, standard, modes, use_cases, status, data_level, deploy, endpoint,
-			                   context_length, description, card, governance)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+			                   context_length, description, card, governance, base_url)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
 			in.ID, in.Name, in.ProviderTeam, in.Type, in.Standard, in.Modes, in.UseCases, in.Status, in.DataLevel, in.Deploy, in.Endpoint,
-			in.ContextLength, in.Description, in.Card, in.Governance)
+			in.ContextLength, in.Description, in.Card, in.Governance, in.BaseURL)
 		if err != nil {
 			return err
 		}
@@ -298,10 +307,10 @@ func (a *API) updateModel(ctx context.Context, c *app.RequestContext) {
 		tag, err := tx.Exec(ctx, `
 			UPDATE model SET name=$2, provider_team=$3, type=$4, standard=$5, modes=$6, use_cases=$7, status=$8, data_level=$9,
 			       deploy=$10, endpoint=$11, context_length=$12, description=$13, card=$14,
-			       governance=$15, updated_at=now()
+			       governance=$15, base_url=$16, updated_at=now()
 			WHERE id = $1`,
 			id, in.Name, in.ProviderTeam, in.Type, in.Standard, in.Modes, in.UseCases, in.Status, in.DataLevel, in.Deploy, in.Endpoint,
-			in.ContextLength, in.Description, in.Card, in.Governance)
+			in.ContextLength, in.Description, in.Card, in.Governance, in.BaseURL)
 		if err != nil {
 			return err
 		}

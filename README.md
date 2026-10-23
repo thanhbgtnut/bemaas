@@ -183,6 +183,7 @@ Thử như sau: vào **Ngân sách & key**, mở chi tiết phòng và cấp m�
 | `Jenkinsfile` | Build, push image, đóng gói Helm và deploy |
 | `L01/deploy-k8s/values.yaml` | Helm values: cổng 8080, probe `/healthz`, chạy non-root, root filesystem chỉ đọc |
 | `L01/configmap-k8s/app.env` | Biến môi trường cho môi trường dev |
+| `L01/agentgw/maas-resources.yaml` | Tài nguyên tạo sẵn trong namespace `agentgw` để bemaas ghi key, bảng giá, MCP xuống agentgateway |
 
 ```sh
 docker build --platform linux/amd64 -f cicd/tanzu-dev/Dockerfile.base \
@@ -190,6 +191,39 @@ docker build --platform linux/amd64 -f cicd/tanzu-dev/Dockerfile.base \
 ```
 
 Build lại base image khi đổi phiên bản Go hoặc `frontend/package-lock.json`.
+
+### Kết nối agentgateway (namespace `agentgw`)
+
+ConfigMap `agentgateway-proxy` do controller agentgateway tự sinh từ Gateway; **không ghi vào đó**. bemaas chỉ sửa các tài nguyên tạo sẵn dưới đây (không có quyền `create`, `delete`):
+
+| Tài nguyên | bemaas ghi |
+|---|---|
+| ConfigMap `maas-keys` (nhãn `agentgateway.dev/apikey: "true"`) | Mỗi key active một dòng `{"keyHash":"sha256:…","metadata":{…}}` |
+| ConfigMap `maas-model-catalog` | `catalog.json` từ bảng giá |
+| `AgentgatewayBackend` `maas-mcp`, `AgentgatewayPolicy` `maas-mcp-tools` | Danh sách MCP server và luật cho phép tool |
+| `AgentgatewayPolicy` `maas-gateway`, `HTTPRoute` `maas-mcp` | Không ghi; tạo một lần (xác thực key trên Gateway, đường vào `/mcp`) |
+| `Role`, `RoleBinding` `maas-key-sync` | Không ghi; cấp `get`, `update`, `patch` trên đúng các tên trên cho service account của bemaas |
+
+Route cho model (`/v1/chat/completions`, `/v1/messages`, …) không do bemaas sinh; tạo `AgentgatewayBackend` và `HTTPRoute` cho từng model trên cụm.
+
+```sh
+# 1. Kiểm tra trước: group/version của CRD và tên trường của bản agentgateway đang chạy
+kubectl api-resources | grep agentgateway
+kubectl explain agentgatewaypolicy.spec.traffic.apiKeyAuthentication --recursive
+kubectl -n dev-maas get pod -o jsonpath='{..serviceAccountName}'   # điền vào RoleBinding
+
+# 2. Tạo tài nguyên
+kubectl apply -f cicd/tanzu-dev/L01/agentgw/maas-resources.yaml
+
+# 3. Bật đồng bộ trong app.env: GATEWAY_SYNC_MODE=kubernetes, KUBE_NAMESPACE=agentgw, rồi deploy lại bemaas
+
+# 4. Kiểm chứng: cấp một key trên MaaS, sau ≤ 30 giây phải thấy dòng mới
+kubectl -n agentgw get cm maas-keys -o yaml
+kubectl auth can-i update configmap/maas-keys -n agentgw \
+  --as=system:serviceaccount:dev-maas:<service-account>
+```
+
+Lượt đồng bộ lỗi ghi log `gateway sync key lỗi` / `gateway sync bảng giá lỗi` / `gateway sync MCP lỗi`; trạng thái MCP còn hiện ở tab Cấu hình gateway.
 
 ## 🗂 Cấu trúc mã nguồn
 

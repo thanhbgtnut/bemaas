@@ -1,0 +1,145 @@
+# Tài nguyên tạo sẵn trong namespace agentgw để bemaas ghi key, bảng giá và MCP xuống agentgateway.
+# MaaS chỉ có quyền get/update/patch trên đúng các tên dưới đây, không tạo hay xoá được gì.
+# Apply:  kubectl apply -f maas-resources.yaml
+#
+# Trước khi apply, kiểm tra trên cụm:
+#   kubectl api-resources | grep agentgateway        -> group/version của CRD (đang giả định agentgateway.dev/v1alpha1)
+#   kubectl explain agentgatewaypolicy.spec.traffic.apiKeyAuthentication --recursive
+#   kubectl explain agentgatewaybackend.spec.mcp --recursive
+#   kubectl -n dev-maas get pod -l app.kubernetes.io/name=bemaas -o jsonpath='{..serviceAccountName}'
+#                                                    -> tên service account của bemaas cho RoleBinding
+
+# ---------------------------------------------------------------------
+# 1. Key: MaaS ghi mỗi key active một dòng {"keyHash":"sha256:...","metadata":{...}}.
+#    Gateway chọn ConfigMap này theo nhãn agentgateway.dev/apikey.
+# ---------------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maas-keys
+  namespace: agentgw
+  labels:
+    agentgateway.dev/apikey: "true"
+data: {}
+---
+# ---------------------------------------------------------------------
+# 2. Bảng giá model: MaaS ghi catalog.json từ bảng giá của mình.
+# ---------------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maas-model-catalog
+  namespace: agentgw
+data:
+  catalog.json: |
+    {"models": []}
+---
+# ---------------------------------------------------------------------
+# 3. Xác thực key trên toàn Gateway. Gộp xác thực, rate limit, access log vào MỘT policy cho Gateway:
+#    hai policy cùng đích sẽ ghi đè nhau dù đều báo ACCEPTED.
+#    Tên trường dưới apiKeyAuthentication phải đối chiếu với `kubectl explain` của bản 1.5.0.
+# ---------------------------------------------------------------------
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: maas-gateway
+  namespace: agentgw
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: agentgateway-proxy
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      configMapSelector:
+        matchLabels:
+          agentgateway.dev/apikey: "true"
+---
+# ---------------------------------------------------------------------
+# 4. MCP: MaaS thay toàn bộ spec của Backend và Policy này mỗi lượt đồng bộ.
+#    Giá trị ban đầu: chưa có server, từ chối mọi tool.
+# ---------------------------------------------------------------------
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: maas-mcp
+  namespace: agentgw
+spec:
+  mcp:
+    failureMode: FailOpen
+    prefixMode: Always
+    targets: []
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: maas-mcp-tools
+  namespace: agentgw
+spec:
+  targetRefs:
+  - group: agentgateway.dev
+    kind: AgentgatewayBackend
+    name: maas-mcp
+  backend:
+    mcp:
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+          - "false"
+---
+# Đường vào /mcp. MaaS không sửa route này.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: maas-mcp
+  namespace: agentgw
+spec:
+  parentRefs:
+  - name: agentgateway-proxy
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /mcp
+    backendRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: maas-mcp
+---
+# ---------------------------------------------------------------------
+# 5. Quyền cho bemaas (chạy ở namespace dev-maas): chỉ get/update/patch trên đúng các tên trên.
+# ---------------------------------------------------------------------
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: maas-key-sync
+  namespace: agentgw
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["maas-keys", "maas-model-catalog"]
+  verbs: ["get", "update", "patch"]
+- apiGroups: ["agentgateway.dev"]
+  resources: ["agentgatewaybackends"]
+  resourceNames: ["maas-mcp"]
+  verbs: ["get", "update", "patch"]
+- apiGroups: ["agentgateway.dev"]
+  resources: ["agentgatewaypolicies"]
+  resourceNames: ["maas-mcp-tools"]
+  verbs: ["get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: maas-key-sync
+  namespace: agentgw
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: maas-key-sync
+subjects:
+- kind: ServiceAccount
+  name: <SERVICE_ACCOUNT_CUA_BEMAAS>
+  namespace: dev-maas

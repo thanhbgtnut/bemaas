@@ -47,8 +47,11 @@ export function useStandards() {
 export const isChat = (k: Kind) => k === 'openai-chat' || k === 'anthropic-messages'
 export const isFile = (k: Kind) => k === 'binary' || k === 'multipart'
 
+// Base URL của model (agentgateway riêng); rỗng thì dùng base chung GATEWAY_BASE_URL.
+export const modelBase = (model: Model, base: string) => (model.base_url || base).replace(/\/$/, '')
+
 export function opUrl(base: string, model: Model, op: Op, query?: string) {
-  return base.replace(/\/$/, '') + model.endpoint + op.path + (query ? `?${query}` : '')
+  return modelBase(model, base) + model.endpoint + op.path + (query ? `?${query}` : '')
 }
 
 // Trạng thái yêu cầu dùng để dựng body và mã mẫu, giống nhau giữa Playground (P5) và tab API (M21).
@@ -110,7 +113,7 @@ const py = (v: unknown, indent = 4) =>
   JSON.stringify(v, null, indent).replace(/\btrue\b/g, 'True').replace(/\bfalse\b/g, 'False').replace(/\bnull\b/g, 'None')
 
 export function codeSamples(std: Standard, op: Op, model: Model, base: string, r: Req): Record<'curl' | 'python' | 'node', string> {
-  const root = base.replace(/\/$/, '')
+  const root = modelBase(model, base)
   const url = opUrl(base, model, op, r.query)
   const file = r.fileName ?? 'tai-lieu.pdf'
   const ctype = r.fileType ?? 'application/octet-stream'

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, useApi, type Model } from '../api'
 import { publicConfig } from '../auth'
 import { Badge, CodeBlock, Empty, ErrorBox, Loading, Modal, Sparkline, Tabs, date, num, usd, useMe } from '../components/ui'
-import { codeSamples, exampleReq, useStandards } from '../standards'
+import { codeSamples, exampleReq, modelBase, useStandards } from '../standards'
 import ModelForm from '../components/ModelForm'
 import { priceText, useStdNames } from './Models'
 import Markdown from '../components/Markdown'
@@ -38,7 +38,7 @@ function ApiTab({ m, base }: { m: Model; base: string }) {
           <span className="block text-muted">{std.description}</span>
           {std.docs_url && <a className="text-primary hover:underline" href={std.docs_url} target="_blank" rel="noreferrer">Tài liệu chuẩn ↗</a>}
         </dd>
-        <dt className="text-subtle">Base URL</dt><dd className="break-all font-mono">{base}</dd>
+        <dt className="text-subtle">Base URL</dt><dd className="break-all font-mono">{modelBase(m, base)}</dd>
         <dt className="text-subtle">Endpoint</dt><dd className="break-all font-mono">{m.endpoint}</dd>
         <dt className="text-subtle">Xác thực</dt><dd className="break-all font-mono">Authorization: Bearer &lt;API key&gt;</dd>
         <dt className="text-subtle">Tính giá</dt><dd>{std.unit === 'page' ? 'Theo trang' : 'Theo token (input, input đã cache, output)'}</dd>
@@ -170,7 +170,7 @@ export default function ModelDetailPage() {
             <h3 className="mb-2 font-semibold">Kết nối dịch vụ</h3>
             <dl className="space-y-1">
               <div><dt className="text-subtle">Cổng</dt><dd className="font-mono">agentgateway</dd></div>
-              <div><dt className="text-subtle">Base URL</dt><dd className="break-all font-mono">{base}</dd></div>
+              <div><dt className="text-subtle">Base URL</dt><dd className="break-all font-mono">{modelBase(m, base)}</dd></div>
               <div><dt className="text-subtle">Endpoint</dt><dd className="break-all font-mono">{m.endpoint}</dd></div>
               <div><dt className="text-subtle">Model id</dt><dd className="font-mono">{m.id}</dd></div>
               {m.context_length && <div><dt className="text-subtle">Ngữ cảnh</dt><dd className="font-mono">{num(m.context_length)} token</dd></div>}

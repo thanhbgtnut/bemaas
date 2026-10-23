@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { api, type Model } from '../api'
+import { publicConfig } from '../auth'
 import { useStandards } from '../standards'
 import { ErrorBox, Field, Loading } from './ui'
 
@@ -11,7 +12,7 @@ export default function ModelForm({ model, onDone }: { model?: Model & { governa
   const [f, setF] = useState({
     id: model?.id ?? '', name: model?.name ?? '', provider_team: model?.provider_team ?? '', standard: model?.standard ?? 'openai',
     modes: model?.modes ?? ['chat'], use_cases: (model?.use_cases ?? []).join(', '), status: model?.status ?? 'beta',
-    data_level: model?.data_level ?? 'noi_bo', endpoint: model?.endpoint ?? '',
+    data_level: model?.data_level ?? 'noi_bo', base_url: model?.base_url ?? '', endpoint: model?.endpoint ?? '',
     context_length: model?.context_length?.toString() ?? '',
     description: model?.description ?? '', card: model?.card ?? '',
     provider_id: model?.price?.provider_id ?? '', input: model?.price?.input ?? '0', output: model?.price?.output ?? '0',
@@ -35,7 +36,7 @@ export default function ModelForm({ model, onDone }: { model?: Model & { governa
       name: f.name, provider_team: f.provider_team, standard: f.standard,
       modes: std && std.ops.length === 1 ? [std.ops[0].id] : f.modes,
       use_cases: f.use_cases.split(',').map((s) => s.trim()).filter(Boolean), status: f.status, data_level: f.data_level,
-      deploy: '', endpoint: f.endpoint.trim(), context_length: f.context_length ? Number(f.context_length) : null,
+      deploy: '', base_url: f.base_url.trim(), endpoint: f.endpoint.trim(), context_length: f.context_length ? Number(f.context_length) : null,
       description: f.description, card: f.card,
       ...(model?.governance ? { governance: model.governance } : {}),
     }
@@ -75,6 +76,9 @@ export default function ModelForm({ model, onDone }: { model?: Model & { governa
           }}>
             {standards.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
+        </Field>
+        <Field label="Base URL agentgateway" hint="Để trống: dùng base URL chung của MaaS">
+          <input className="input font-mono" type="url" placeholder={publicConfig.gateway_base_url} value={f.base_url} onChange={set('base_url')} />
         </Field>
         <Field label="Endpoint trên gateway" hint="Để trống: dùng endpoint mặc định của chuẩn">
           <input className="input font-mono" placeholder={defaultEndpoint} value={f.endpoint} onChange={set('endpoint')} />
